@@ -5,20 +5,58 @@ class SongsController < ApplicationController
       @songs = Song.all
     end
   
-   def upload
-     CSV.foreach(params[:file].path, headers: true) do |song|
-       new_song = Song.find_or_create_by(title: song[0])
-       new_artist = Artist.find_or_create_by(name: song[1])
-       new_song.artist = new_artist
-       new_song.save
-     end
-     redirect_to songs_path
-   end
- 
     def show
-      @song = Song.find(params[:id])
+       @song = Song.find(params[:id])
+     end
+   
+     def new
+       @song = Song.new
+     end
+   
+     def create
+       @song = Song.new(song_params)
+   
+       if @song.save
+         redirect_to @song
+       else
+         render :new
+       end
+     end
+   
+     def edit
+       @song = Song.find(params[:id])
+     end
+   
+     def update
+       @song = Song.find(params[:id])
+   
+       @song.update(song_params)
+   
+       if @song.save
+         redirect_to @song
+       else
+         render :edit
+       end
+     end
+   
+     def destroy
+       @song = Song.find(params[:id])
+       @song.destroy
+       flash[:notice] = "Song deleted."
+        redirect_to songs_path
+      end
+    
+     def upload
+       CSV.foreach(params["file"].path, headers: true) do |song|
+         # /Song Clean,ARTIST CLEAN,Release Year,COMBINED,First?,Year?,PlayCount,F*G
+         song = Song.create(title: song[0], artist_name: song[1])
+       end
+       redirect_to songs_path
+     end
+   
+      private
+    
+      def song_params
+        params.require(:song).permit(:title, :artist_name)
+      end
     end
- @@ -51,4 +62,3 @@ def song_params
-      params.require(:song).permit(:title, :artist_name)
-    end
-  end
